@@ -1,0 +1,18 @@
+{
+    "config": {
+        "TENCENT_CLOUD": {
+            "SECRET_ID": "",
+            "SECRET_KEY": ""
+        },
+        "ALIYUN": {
+            "ACCESS_KEY_ID": "",
+            "ACCESS_KEY_SECRET": ""
+        },
+        "nginx_position": "nginx",
+        "environment": "linux",
+        "ssl_platform": "tencent",
+        "domain_name_platform": "aliyun",
+        "ssl_path": "D:/SSL",
+        "ssl_format": "pem"
+    }
+}

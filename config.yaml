@@ -1,0 +1,14 @@
+app:
+  name: certificate
+  version: 1.0.0
+
+config:
+  ssl_path: "/usr/local/nginx/ssl/"
+#  ssl_path: "D:/SSL"
+  format: "pem"
+  nginx_position: "nginx"
+  environment: "linux"
+  TENCENTCLOUD_SECRET_ID: ""
+  TENCENTCLOUD_SECRET_KEY: ""
+  ALI_SECRET_ID: ''
+  ALI_SECRET_KEY: ''

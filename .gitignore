@@ -1,0 +1,10 @@
+# Created by .ignore support plugin (hsz.mobi)
+# IntelliJ
+.idea_modules/
+.idea/
+.idea
+*.iml
+common-lib.iml
+target
+rebel.xml
+log.path_IS_UNDEFINED/

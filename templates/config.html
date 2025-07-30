@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>居中表单页面</title>
+    <link rel="stylesheet" href="../static/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../static/css/all.min.css">
+    <style>
+       body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 800px;
+        }
+        .card-header {
+            background-color: #e9ecef;
+        }
+        /* 密码框和切换按钮在同一行 */
+        .password-wrapper {
+            position: relative;
+        }
+        .toggle-password {
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container mt-5 mb-5">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h3>系统配置</h3>
+            </div>
+            <div class="card-body">
+                {% if config %}
+                <form id="config-form">
+                    <div class="form-group row">
+                        <label for="ACCESS_KEY_ID" class="col-sm-4 col-form-label">ALI_SECRET_ID</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" id="ACCESS_KEY_ID" name="ALIYUN.ACCESS_KEY_ID" value="{{ config.ALIYUN.ACCESS_KEY_ID }}">
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label for="ACCESS_KEY_SECRET" class="col-sm-4 col-form-label">ALI_SECRET_KEY</label>
+                        <div class="col-sm-8 password-wrapper">
+                            <input type="password" class="form-control" id="ACCESS_KEY_SECRET" name="ALIYUN.ACCESS_KEY_SECRET" value="{{ config.ALIYUN.ACCESS_KEY_SECRET }}">
+                            <i class="fas fa-eye toggle-password"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label for="SECRET_ID" class="col-sm-4 col-form-label">腾讯SECRET_ID</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" id="SECRET_ID" name="TENCENT_CLOUD.SECRET_ID" value="{{ config.TENCENT_CLOUD.SECRET_ID }}">
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label for="SECRET_KEY" class="col-sm-4 col-form-label">腾讯SECRET_KEY</label>
+                        <div class="col-sm-8 password-wrapper">
+                            <input type="password" class="form-control" id="SECRET_KEY" name="TENCENT_CLOUD.SECRET_KEY" value="{{ config.TENCENT_CLOUD.SECRET_KEY }}">
+                            <i class="fas fa-eye toggle-password"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label for="environment" class="col-sm-4 col-form-label">系统</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" id="environment" name="environment" value="{{ config.environment }}">
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="ssl_format" class="col-sm-4 col-form-label">证书格式</label>
+                        <div class="col-sm-8">
+                            <select class="form-control" id="ssl_format" name="ssl_format">
+                                <option value="pem" {% if config.ssl_format == 'pem' %}selected{% endif %}>PEM</option>
+                                <option value="pfx" {% if config.ssl_format == 'pfx' %}selected{% endif %}>PFX</option>
+                                <option value="p12" {% if config.ssl_format == 'p12' %}selected{% endif %}>P12</option>
+                                <option value="der" {% if config.ssl_format == 'der' %}selected{% endif %}>DER</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="nginx_position" class="col-sm-4 col-form-label">nginx命令</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" id="nginx_position" name="nginx_position" value="{{ config.nginx_position }}">
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label for="ssl_path" class="col-sm-4 col-form-label">证书存放路径</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" id="ssl_path" name="ssl_path" value="{{ config.ssl_path }}">
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="form-group row">
+                        <div class="col-sm-12 text-right">
+                             <button type="submit" class="btn btn-primary">保存</button>
+                             <button type="button" class="btn btn-secondary" id="cancel-btn">取消</button>
+                        </div>
+                    </div>
+                </form>
+                {% else %}
+                <div class="alert alert-danger" role="alert">
+                  错误：未能加载配置数据。
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <script src="../static/js/jquery-3.5.1.slim.min.js"></script>
+    <script src="../static/js/popper.min.js"></script>
+    <script src="../static/js/bootstrap.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('config-form');
+            if (!form) return; // 如果表单不存在，则不执行后续JS
+
+            const cancelButton = document.getElementById('cancel-btn');
+            const togglePasswordIcons = document.querySelectorAll('.toggle-password');
+
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
+                const formData = new FormData(form);
+                const result = {};
+                formData.forEach((value, key) => {
+                    if (key.includes('.')) {
+                        const parts = key.split('.');
+                        const parentKey = parts[0];
+                        const childKey = parts[1];
+                        if (!result[parentKey]) {
+                            result[parentKey] = {};
+                        }
+                        result[parentKey][childKey] = value;
+                    } else {
+                        result[key] = value;
+                    }
+                });
+                const jsonData = JSON.stringify({ config: result });
+                fetch('/updateConfig', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: jsonData
+                })
+                .then(response => {
+                    if (response.ok) return response.json();
+                    throw new Error('网络响应错误');
+                })
+                .then(result => {
+                    alert('保存成功！');
+                    window.location.href = '/'
+                })
+                .catch(error => {
+                    console.error('错误:', error);
+                    alert('保存失败，请查看控制台获取更多信息。');
+                });
+            });
+
+            cancelButton.addEventListener('click', function() {
+                history.back();
+            });
+
+            togglePasswordIcons.forEach(icon => {
+                icon.addEventListener('click', function() {
+                    const input = this.previousElementSibling;
+                    const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+                    input.setAttribute('type', type);
+                    this.classList.toggle('fa-eye');
+                    this.classList.toggle('fa-eye-slash');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
