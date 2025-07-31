@@ -1,6 +1,7 @@
 from flask import Blueprint
 
-from .web_service import index, config, update, ssl, ssl_detail, deploy_certificate
+from web import socketio
+from .web_service import index, config, update, apply_ssl_logic, ssl_detail, deploy_certificate
 
 # 创建一个名为 'web' 的蓝图
 web_bp = Blueprint('web', __name__)
@@ -21,9 +22,9 @@ def _update():
     return update()
 
 
-@web_bp.route("/getSsl", methods=['POST'])
-def _ssl():
-    return ssl()
+@socketio.on('/apply_ssl')
+def _ssl(domainName):
+    return apply_ssl_logic(domainName)
 
 
 @web_bp.route('/getSslDetail/<ssl_id>')

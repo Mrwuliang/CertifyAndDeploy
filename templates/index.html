@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>居中表单页面</title>
+    <title>证书申请与部署</title>
     <link rel="stylesheet" href="../static/css/bootstrap.min.css">
     <link rel="stylesheet" href="../static/css/all.min.css">
     <style>
-        /* 让容器铺满整个视口高度 */
         html, body {
             height: 100%;
         }
@@ -15,10 +14,20 @@
             min-height: 100%;
         }
         .settings-button {
-            position: absolute; /* 绝对定位 */
-            top: 1rem;          /* 距离顶部 1rem (约 16px) */
-            right: 1.5rem;      /* 距离右侧 1.5rem (约 24px) */
-            z-index: 10;        /* 确保按钮在最上层 */
+            position: absolute;
+            top: 1rem;
+            right: 1.5rem;
+            z-index: 10;
+        }
+        #log-container {
+            margin-top: 20px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            height: 300px;
+            overflow-y: scroll;
+            font-family: monospace;
+            white-space: pre-wrap;
         }
     </style>
 </head>
@@ -29,8 +38,8 @@
         <div class="col-12 col-md-8 col-lg-6">
             <div class="card shadow-sm">
                 <div class="card-body">
-                    <h3 class="card-title text-center mb-4">信息提交</h3>
-                    <form>
+                    <h3 class="card-title text-center mb-4">申请证书</h3>
+                    <form id="ssl-form">
                         <div class="form-group row">
                             <label for="inputDomain" class="col-sm-3 col-form-label text-sm-right">域名</label>
                             <div class="col-sm-9">
@@ -44,14 +53,58 @@
                             </div>
                         </div>
                     </form>
+                    <div id="log-container"></div>
                 </div>
             </div>
         </div>
     </div>
 
+    <script src="../static/js/socket.io.js"></script>
     <script src="../static/js/jquery-3.5.1.slim.min.js"></script>
     <script src="../static/js/popper.min.js"></script>
     <script src="../static/js/bootstrap.min.js"></script>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const socket = io();
+            const form = document.getElementById('ssl-form');
+            const domainInput = document.getElementById('inputDomain');
+            const logContainer = document.getElementById('log-container');
+
+            socket.on('connect', function() {
+                logContainer.innerHTML += '等待操作\n';
+            });
+
+            // --- 核心修改在这里 ---
+            socket.on('log', function(data) {
+                // 1. 无论什么情况，都先显示日志消息
+                const message = `[${data.status}] ${data.message}\n`;
+                logContainer.innerHTML += message;
+                logContainer.scrollTop = logContainer.scrollHeight; // 自动滚动到底部
+
+                // 2. 检查自定义状态码 code
+                if (data.code) {
+                    switch (data.code) {
+                        case 10001:
+                            // 如果 code 是 10001，则在短暂延迟后跳转
+                            console.log('Configuration missing, redirecting to /config...');
+                            setTimeout(function() {
+                                window.location.href = '/config';
+                            }, 2000);
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            });
+
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
+                logContainer.innerHTML = ''; // 清空旧日志
+                const domainName = domainInput.value;
+                socket.emit('/apply_ssl', { domainName: domainName });
+            });
+        });
+    </script>
 </body>
 </html>
