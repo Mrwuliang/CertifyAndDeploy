@@ -8,3 +8,4 @@ common-lib.iml
 target
 rebel.xml
 log.path_IS_UNDEFINED/
+static
