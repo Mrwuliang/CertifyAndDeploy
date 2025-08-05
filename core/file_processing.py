@@ -167,13 +167,13 @@ def SCRIPT():
     # 同样，在函数内部获取配置
     from utils.config import config
     config = config.get('config')
-    restart_nginx = config.get('nginx')
+    restart_nginx = config.get('nginx_position')
 
     try:
-        res = subprocess.run(restart_nginx, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        if res.returncode == 0:
-            print(res.stdout.decode('utf-8'))
-            return "ok"
+        res = subprocess.run([restart_nginx, '-t'], check=True, text=True)
+        if 'ok' in res:
+            subprocess.run([restart_nginx, '-s', 'reload'], check=True, text=True)
+            return '部署成功'
     except subprocess.CalledProcessError as e:
-        print(e.stderr.decode('gbk'))
-        return e.stderr.decode('gbk')
+        print(e)
+        return e

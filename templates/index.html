@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>证书申请与部署</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<!--    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">-->
+<!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">-->
+    <link rel="stylesheet" href="../static/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../static/css/all.min.css">
 
     <style>
         html, body {
@@ -44,10 +46,33 @@
                         <div class="form-group row">
                             <label for="inputDomain" class="col-sm-3 col-form-label text-sm-right">域名</label>
                             <div class="col-sm-9">
-                                <input type="text" class="form-control" id="inputDomain" placeholder="请输入域名">
+                                <input type="text" class="form-control" id="inputDomain" name="inputDomain" placeholder="请输入域名">
                             </div>
                         </div>
+                        <div class="form-group row">
+                            <label for="sslName" class="col-sm-3 col-form-label text-sm-right">保存证书名</label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control" id="sslName" name="sslName" placeholder="默认与域名相同（nginx配置的证书名，不带后缀）">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                        <label for="ssl_format" class="col-sm-3 col-form-label text-sm-right">证书格式</label>
+                        <div class="col-sm-9">
+                            <select class="form-control" id="ssl_format" name="ssl_format">
+                                <option value="pem" {% if config.ssl_format == 'pem' %}selected{% endif %}>PEM</option>
+                                <option value="pfx" {% if config.ssl_format == 'pfx' %}selected{% endif %}>PFX</option>
+                                <option value="p12" {% if config.ssl_format == 'p12' %}selected{% endif %}>P12</option>
+                                <option value="der" {% if config.ssl_format == 'der' %}selected{% endif %}>DER</option>
+                            </select>
+                        </div>
+                    </div>
 
+                    <div class="form-group row">
+                        <label for="ssl_path" class="col-sm-3 col-form-label text-sm-right">证书存放路径</label>
+                        <div class="col-sm-9">
+                            <input type="text" class="form-control" id="ssl_path" name="ssl_path" value="{{ config.ssl_path }}">
+                        </div>
+                    </div>
                         <div class="form-group row">
                             <div class="col-sm-9 offset-sm-3">
                                 <button type="submit" class="btn btn-primary btn-block">提交</button>
@@ -61,17 +86,20 @@
     </div>
 
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.com/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>-->
+<!--    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>-->
+<!--    <script src="https://cdn.jsdelivr.com/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>-->
+<!--    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>-->
+    <script src="../static/js/socket.io.js"></script>
+    <script src="../static/js/jquery-3.5.1.slim.min.js"></script>
+    <script src="../static/js/popper.min.js"></script>
+    <script src="../static/js/bootstrap.min.js"></script>
 
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const socket = io();
             const form = document.getElementById('ssl-form');
-            const domainInput = document.getElementById('inputDomain');
             const logContainer = document.getElementById('log-container');
 
             socket.on('connect', function() {
@@ -103,9 +131,35 @@
 
             form.addEventListener('submit', function(event) {
                 event.preventDefault();
-                logContainer.innerHTML = ''; // 清空旧日志
-                const domainName = domainInput.value;
-                socket.emit('/apply_ssl', { domainName: domainName });
+                const formData = new FormData(form);
+                const result = {};
+                let bool = true
+                formData.forEach((value, key) => {
+                    if (!value) {
+                        bool = false
+                        const label = document.querySelector(`label[for="${key}"]`);
+                        alert(label.textContent.trim() + '不能为空！')
+                    }
+                    result[key] = value;
+                });
+                if (bool) {
+                    logContainer.innerHTML = '';
+                    socket.emit('/apply_ssl', result);
+                }
+            });
+
+            const inputDomain = document.getElementById('inputDomain');
+            const sslName = document.getElementById('sslName');
+
+            // 方法1：在用户输入结束后延迟更新（防抖，适合实时输入）
+            let debounceTimer;
+            inputDomain.addEventListener('input', function () {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    if (inputDomain.value.trim() !== '') {
+                        sslName.value = inputDomain.value.trim();
+                    }
+                }, 300);
             });
         });
     </script>

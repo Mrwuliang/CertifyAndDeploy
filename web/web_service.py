@@ -8,7 +8,9 @@ import time
 
 
 def index():
-    return render_template('index.html')
+    from utils.config import config
+    config = config.get('config', {})
+    return render_template('index.html', config=config)
 
 
 def config():
@@ -28,7 +30,7 @@ def update():
     return jsonify({"status": "error", "message": "请求格式错误"}), 400
 
 
-def apply_ssl_logic(data):
+def apply_ssl_logic(ssl_data):
     """
     处理SSL证书申请的核心业务逻辑。
     """
@@ -40,7 +42,7 @@ def apply_ssl_logic(data):
         socketio.emit('log', {"code": 10001, "status": "error", "message": error_msg})
         return
 
-    domain_name = data.get('domainName')
+    domain_name = ssl_data.get('domainName')
     if not domain_name:
         socketio.emit('log', {"code": 0, "status": "error", "message": "域名不能为空"})
         return
@@ -121,4 +123,5 @@ def deploy_certificate(ssl_id: str, ssl_name: str):
         from utils.config import config
         config = config.get('config', {})
         unzip_and_rename_keys(save_path, config.get('ssl_path'), ssl_name)
-
+        result = SCRIPT()
+        socketio.emit('log', {"code": 0, "status": "failed", "message": result})

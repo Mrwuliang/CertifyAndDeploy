@@ -1,7 +1,7 @@
 from flask import Blueprint
 
 from web import socketio
-from .web_service import index, config, update, apply_ssl_logic, ssl_detail, deploy_certificate
+from .web_service import index, config, update, apply_ssl_logic, ssl_detail, deploy_certificate, shell
 
 # 创建一个名为 'web' 的蓝图
 web_bp = Blueprint('web', __name__)
@@ -23,8 +23,8 @@ def _update():
 
 
 @socketio.on('/apply_ssl')
-def _ssl(domainName):
-    return apply_ssl_logic(domainName)
+def _ssl(ssl_data):
+    return apply_ssl_logic(ssl_data)
 
 
 @web_bp.route('/getSslDetail/<ssl_id>')
@@ -36,3 +36,6 @@ def _ssl_detail(ssl_id):
 def download():
     return deploy_certificate()
 
+@web_bp.route("/shell")
+def _shell():
+    return shell()
