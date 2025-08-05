@@ -35,7 +35,3 @@ def _ssl_detail(ssl_id):
 @web_bp.route('/download', methods=['POST'])
 def download():
     return deploy_certificate()
-
-@web_bp.route("/shell")
-def _shell():
-    return shell()
