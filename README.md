@@ -14,6 +14,7 @@ git clone https://github.com/Mrwuliang/CertifyAndDeploy.git
 cd CertifyAndDeploy
 pip3 install -r requirements.txt
 ```
+首次启动先进入/config页面做一下基础配置，填写腾讯云和阿里云的SECRET密钥
 
 ### 运行
 python3 main.py
