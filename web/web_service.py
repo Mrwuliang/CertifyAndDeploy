@@ -34,10 +34,8 @@ def apply_ssl_logic(ssl_data):
     """
     处理SSL证书申请的核心业务逻辑。
     """
-    from utils.config import config
-    config_data = config.get('config', {})
 
-    if not config_data.get('TENCENT_CLOUD', {}).get('SECRET_ID'):
+    if not ssl_data.get('TENCENT_CLOUD', {}).get('SECRET_ID'):
         error_msg = "未填写腾讯云 SECRET_ID，2秒后将自动跳转到配置页面..."
         socketio.emit('log', {"code": 10001, "status": "error", "message": error_msg})
         return
@@ -54,8 +52,8 @@ def apply_ssl_logic(ssl_data):
     if CertificateId:
         socketio.emit('log', {"code": 0, "status": "success", "message": f"申请成功，证书ID：{CertificateId}"})
         socketio.emit('log', {"code": 0, "status": "info", "message": "开始验证域名所有权..."})
-
-        ssl_result = ssl_detail(CertificateId)
+        ssl_data['CertificateId'] = CertificateId
+        ssl_result = ssl_detail(ssl_data)
         if ssl_result:
             socketio.emit('log', {"code": 0, "status": "success", "message": "域名验证成功，等待证书签发..."})
 
@@ -68,7 +66,7 @@ def apply_ssl_logic(ssl_data):
 
                 if issued:
                     socketio.emit('log', {"code": 0, "status": "success", "message": "证书已签发，准备部署证书..."})
-                    deploy_certificate(CertificateId, domain_name)
+                    deploy_certificate(ssl_data)
                     break
                 else:
                     socketio.emit('log', {"code": 0, "status": "waiting",
@@ -84,9 +82,9 @@ def apply_ssl_logic(ssl_data):
         socketio.emit('log', {"code": 0, "status": "error", "message": f"证书申请失败: {error_message}"})
 
 
-def ssl_detail(ssl_id):
+def ssl_detail(ssl_data):
     try:
-        detail = describe_certificate(ssl_id)
+        detail = describe_certificate(ssl_data.get('CertificateId'))
         # 2. 检查DV证书验证信息是否存在
         DvAuthDetail = detail.get('DvAuthDetail')
         if DvAuthDetail:
@@ -115,13 +113,11 @@ def ssl_detail(ssl_id):
         return False
 
 
-def deploy_certificate(ssl_id: str, ssl_name: str):
-    result = download_certificate_url(ssl_id)
+def deploy_certificate(ssl_data):
+    result = download_certificate_url(ssl_data.get('CertificateId'))
     socketio.emit('log', {"code": 0, "status": "success", "message": "开始下载证书..."})
     save_path = download_file(result.get('DownloadCertificateUrl'), 'temp/' + result.get('DownloadFilename'))
     if save_path:
-        from utils.config import config
-        config = config.get('config', {})
-        unzip_and_rename_keys(save_path, config.get('ssl_path'), ssl_name)
+        unzip_and_rename_keys(save_path, ssl_data.get('ssl_path'), ssl_data.get('sslName'))
         result = SCRIPT()
         socketio.emit('log', {"code": 0, "status": "failed", "message": result})
