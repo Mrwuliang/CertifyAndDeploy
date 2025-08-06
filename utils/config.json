@@ -12,7 +12,7 @@
         "environment": "linux",
         "ssl_platform": "tencent",
         "domain_name_platform": "aliyun",
-        "ssl_path": "D:/SSL",
+        "ssl_path": "/etc/nginx/ssl",
         "ssl_format": "pem"
     }
 }
